@@ -83,9 +83,11 @@ function Dashboard() {
             {results && (
                 <div className="results-section">
                     <h2>Results</h2>
+
+                    <h3 className="section-label">Haemoglobin</h3>
                     <div className="results-grid">
                         <div className="result-card">
-                            <h3>Haemoglobin</h3>
+                            <h3>Total Hb</h3>
                             <p>{(results.concentration_total_M * 1000).toFixed(4)} mM</p>
                         </div>
                         <div className="result-card">
@@ -107,6 +109,31 @@ function Dashboard() {
                         <div className="result-card">
                             <h3>Wavelength</h3>
                             <p>{results.wavelength_nm} nm</p>
+                        </div>
+                    </div>
+
+                    <h3 className="section-label">White Blood Cells</h3>
+                    <div className="results-grid">
+                        <div className="result-card">
+                            <h3>WBC Index</h3>
+                            <p>{results.wbc_index ? results.wbc_index.toFixed(3) : 'N/A'}</p>
+                        </div>
+                        <div className="result-card">
+                            <h3>WBC Level</h3>
+                            <p className={
+                                results.wbc_level === 'normal' ? 'normal' :
+                                    results.wbc_level === 'high' ? 'high' : 'low'
+                            }>
+                                {results.wbc_level ? results.wbc_level.toUpperCase() : 'N/A'}
+                            </p>
+                        </div>
+                        <div className="result-card">
+                            <h3>Absorbance 730nm</h3>
+                            <p>{results.absorbance_730nm ? results.absorbance_730nm.toFixed(4) : 'N/A'}</p>
+                        </div>
+                        <div className="result-card">
+                            <h3>Absorbance 850nm</h3>
+                            <p>{results.absorbance_850nm ? results.absorbance_850nm.toFixed(4) : 'N/A'}</p>
                         </div>
                     </div>
                 </div>

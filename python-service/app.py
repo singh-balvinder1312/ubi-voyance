@@ -3,7 +3,7 @@ from flask_cors import CORS
 import os
 import numpy as np
 from pipeline.haemoglobin import calculate_haemoglobin
-
+from pipeline.haemoglobin import calculate_haemoglobin, calculate_wbc
 
 app = Flask(__name__)
 CORS(app)
@@ -77,31 +77,46 @@ def simulate():
     file.save(filepath)
 
     try:
-        from pipeline.vtu_to_mcx import read_vtu, voxelize, build_mcx_json
-        import json
+        from pipeline.vtu_to_mcx import read_vtu, voxelize
 
         data = read_vtu(filepath)
         points = data["points"]
         volume, origin = voxelize(points, resolution=0.25, padding=4)
 
         total_photons = int(volume.sum())
-        absorbed_photons = int(total_photons * 0.25)
 
-        result = calculate_haemoglobin(
+        absorbed_750 = int(total_photons * 0.25)
+        absorbed_730 = int(total_photons * 0.22)
+        absorbed_850 = int(total_photons * 0.18)
+
+        hb_result = calculate_haemoglobin(
             I0=total_photons,
-            I=total_photons - absorbed_photons,
-            wavelength=wavelength,
+            I=total_photons - absorbed_750,
+            wavelength=750,
             path_length_cm=1.0
         )
 
-        result["total_voxels"] = total_photons
-        result["absorbed_voxels"] = absorbed_photons
-        result["filename"] = file.filename
+        wbc_result = calculate_wbc(
+            I0_730=total_photons,
+            I_730=total_photons - absorbed_730,
+            I0_850=total_photons,
+            I_850=total_photons - absorbed_850,
+            path_length_cm=1.0
+        )
+
+        result = {
+            **hb_result,
+            **wbc_result,
+            "total_voxels": total_photons,
+            "absorbed_voxels": absorbed_750,
+            "filename": file.filename
+        }
 
         return jsonify(result)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)

@@ -129,3 +129,23 @@
     font-weight: bold;
     margin: 0;
 }
+
+.section-label {
+    color: #888;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 25px 0 15px 0;
+}
+
+.normal {
+    color: #00ff88;
+}
+
+.high {
+    color: #ff4444;
+}
+
+.low {
+    color: #ffaa00;
+}
