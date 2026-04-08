@@ -19,11 +19,10 @@ def calculate_haemoglobin(I0, I, wavelength, path_length_cm=1.0):
 
     epsilon_HbO2 = epsilon["HbO2"]
     epsilon_Hb = epsilon["Hb"]
-    epsilon_total = epsilon_HbO2 + epsilon_Hb
 
-    concentration_total = absorbance / (epsilon_total * path_length_cm)
     concentration_HbO2 = absorbance / (epsilon_HbO2 * path_length_cm)
     concentration_Hb = absorbance / (epsilon_Hb * path_length_cm)
+    concentration_total = (concentration_HbO2 + concentration_Hb) / 2
 
     total_Hb = concentration_HbO2 + concentration_Hb
     SpO2 = (concentration_HbO2 / total_Hb) * 100 if total_Hb > 0 else 0

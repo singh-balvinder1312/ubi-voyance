@@ -20,10 +20,11 @@ public class PipelineController {
 
     @PostMapping("/simulate")
     public ResponseEntity<String> simulate(
-            @RequestParam("file") MultipartFile file,
+            @RequestParam("vtu_file") MultipartFile vtuFile,
+            @RequestParam("jnii_file") MultipartFile jniiFile,
             @RequestParam(value = "wavelength", defaultValue = "750") int wavelength) {
         try {
-            String result = pythonService.runSimulation(file, wavelength);
+            String result = pythonService.runSimulation(vtuFile, jniiFile, wavelength);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("{\"error\": \"" + e.getMessage() + "\"}");

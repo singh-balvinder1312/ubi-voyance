@@ -11,6 +11,9 @@ function Dashboard() {
     const [error, setError] = useState('');
     const fileInputRef = useRef(null);
 
+    const [jniiFile, setJniiFile] = useState(null);
+    const jniiInputRef = useRef(null);
+
     const handleFileChange = (e) => {
         const selected = e.target.files[0];
         if (selected) {
@@ -18,6 +21,13 @@ function Dashboard() {
             setStatus('');
             setError('');
             setResults(null);
+        }
+    };
+
+    const handleJniiChange = (e) => {
+        const selected = e.target.files[0];
+        if (selected) {
+            setJniiFile(selected);
         }
     };
 
@@ -37,6 +47,10 @@ function Dashboard() {
             setError('Please select a VTU file first');
             return;
         }
+        if (!jniiFile) {
+            setError('Please select a JNII file first');
+            return;
+        }
         setLoading(true);
         setStatus('Running simulation...');
         setError('');
@@ -44,7 +58,8 @@ function Dashboard() {
 
         try {
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('vtu_file', file);
+            formData.append('jnii_file', jniiFile);
             formData.append('wavelength', wavelength);
 
             const response = await axios.post(
@@ -68,31 +83,72 @@ function Dashboard() {
             </div>
 
             <div className="upload-section">
-                <h2>Upload VTU File</h2>
+                <h2>Upload Files</h2>
 
-                <div
-                    className="upload-box"
-                    onDrop={handleDrop}
-                    onDragOver={(e) => e.preventDefault()}
-                    onClick={() => fileInputRef.current.click()}
-                >
-                    <input
-                        type="file"
-                        accept=".vtu,.vtk,.stl"
-                        onChange={handleFileChange}
-                        ref={fileInputRef}
-                    />
-                    <label className="upload-label">
-                        <span className="upload-icon">⬆</span>
-                        {file ? (
-                            <span className="file-selected">{file.name}</span>
-                        ) : (
-                            <>
-                                <span>Drag and drop or <span className="highlight">browse</span></span>
-                                <span style={{fontSize: '0.8rem', color: '#4b5563'}}>Supports .vtu .vtk .stl</span>
-                            </>
-                        )}
-                    </label>
+                <div className="upload-row">
+                    <div className="upload-item">
+                        <p className="upload-item-label">VTU File (SimVascular output)</p>
+                        <div
+                            className="upload-box"
+                            onClick={() => fileInputRef.current.click()}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                const dropped = e.dataTransfer.files[0];
+                                if (dropped) setFile(dropped);
+                            }}
+                            onDragOver={(e) => e.preventDefault()}
+                        >
+                            <input
+                                type="file"
+                                accept=".vtu,.vtk"
+                                onChange={handleFileChange}
+                                ref={fileInputRef}
+                            />
+                            <label className="upload-label">
+                                <span className="upload-icon">⬆</span>
+                                {file ? (
+                                    <span className="file-selected">{file.name}</span>
+                                ) : (
+                                    <>
+                                        <span>Drag and drop or <span className="highlight">browse</span></span>
+                                        <span style={{fontSize: '0.8rem', color: '#4b5563'}}>.vtu .vtk</span>
+                                    </>
+                                )}
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="upload-item">
+                        <p className="upload-item-label">JNII File (MCX output)</p>
+                        <div
+                            className="upload-box"
+                            onClick={() => jniiInputRef.current.click()}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                const dropped = e.dataTransfer.files[0];
+                                if (dropped) setJniiFile(dropped);
+                            }}
+                            onDragOver={(e) => e.preventDefault()}
+                        >
+                            <input
+                                type="file"
+                                accept=".jnii"
+                                onChange={handleJniiChange}
+                                ref={jniiInputRef}
+                            />
+                            <label className="upload-label">
+                                <span className="upload-icon">⬆</span>
+                                {jniiFile ? (
+                                    <span className="file-selected">{jniiFile.name}</span>
+                                ) : (
+                                    <>
+                                        <span>Drag and drop or <span className="highlight">browse</span></span>
+                                        <span style={{fontSize: '0.8rem', color: '#4b5563'}}>.jnii</span>
+                                    </>
+                                )}
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="controls-row">
@@ -131,7 +187,6 @@ function Dashboard() {
                     </div>
                 )}
             </div>
-
             {results && (
                 <div className="results-section">
                     <h2>Results</h2>
@@ -199,6 +254,10 @@ function Dashboard() {
                         <div className="result-card">
                             <h3>File</h3>
                             <p style={{fontSize: '0.9rem'}}>{results.filename}</p>
+                        </div>
+                        <div className="result-card">
+                            <h3>MCX File</h3>
+                            <p style={{fontSize: '0.9rem'}}>{results.mcx_file}</p>
                         </div>
                     </div>
                 </div>

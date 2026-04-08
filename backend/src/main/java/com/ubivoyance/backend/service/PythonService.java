@@ -18,15 +18,21 @@ public class PythonService {
         return restTemplate.getForObject(pythonBaseUrl + "/python/health", String.class);
     }
 
-    public String runSimulation(MultipartFile file, int wavelength) throws Exception {
+    public String runSimulation(MultipartFile vtuFile, MultipartFile jniiFile, int wavelength) throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("file", new ByteArrayResource(file.getBytes()) {
+        body.add("vtu_file", new ByteArrayResource(vtuFile.getBytes()) {
             @Override
             public String getFilename() {
-                return file.getOriginalFilename();
+                return vtuFile.getOriginalFilename();
+            }
+        });
+        body.add("jnii_file", new ByteArrayResource(jniiFile.getBytes()) {
+            @Override
+            public String getFilename() {
+                return jniiFile.getOriginalFilename();
             }
         });
         body.add("wavelength", String.valueOf(wavelength));
