@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import './Dashboard.css';
 
@@ -8,19 +8,39 @@ function Dashboard() {
     const [results, setResults] = useState(null);
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState('');
+    const [error, setError] = useState('');
+    const fileInputRef = useRef(null);
 
     const handleFileChange = (e) => {
-        setFile(e.target.files[0]);
-        setStatus('File selected: ' + e.target.files[0].name);
+        const selected = e.target.files[0];
+        if (selected) {
+            setFile(selected);
+            setStatus('');
+            setError('');
+            setResults(null);
+        }
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        const dropped = e.dataTransfer.files[0];
+        if (dropped) {
+            setFile(dropped);
+            setStatus('');
+            setError('');
+            setResults(null);
+        }
     };
 
     const handleSubmit = async () => {
         if (!file) {
-            setStatus('Please select a file first');
+            setError('Please select a VTU file first');
             return;
         }
         setLoading(true);
         setStatus('Running simulation...');
+        setError('');
+        setResults(null);
 
         try {
             const formData = new FormData();
@@ -33,8 +53,9 @@ function Dashboard() {
             );
             setResults(response.data);
             setStatus('Simulation complete');
-        } catch (error) {
-            setStatus('Error: ' + error.message);
+        } catch (err) {
+            setError(err.response?.data?.error || err.message || 'Simulation failed');
+            setStatus('');
         }
         setLoading(false);
     };
@@ -48,43 +69,74 @@ function Dashboard() {
 
             <div className="upload-section">
                 <h2>Upload VTU File</h2>
-                <div className="upload-box">
+
+                <div
+                    className="upload-box"
+                    onDrop={handleDrop}
+                    onDragOver={(e) => e.preventDefault()}
+                    onClick={() => fileInputRef.current.click()}
+                >
                     <input
                         type="file"
                         accept=".vtu,.vtk,.stl"
                         onChange={handleFileChange}
+                        ref={fileInputRef}
                     />
+                    <label className="upload-label">
+                        <span className="upload-icon">⬆</span>
+                        {file ? (
+                            <span className="file-selected">{file.name}</span>
+                        ) : (
+                            <>
+                                <span>Drag and drop or <span className="highlight">browse</span></span>
+                                <span style={{fontSize: '0.8rem', color: '#4b5563'}}>Supports .vtu .vtk .stl</span>
+                            </>
+                        )}
+                    </label>
                 </div>
 
-                <div className="wavelength-selector">
-                    <label>Wavelength (nm):</label>
-                    <select
-                        value={wavelength}
-                        onChange={(e) => setWavelength(Number(e.target.value))}
+                <div className="controls-row">
+                    <div className="wavelength-selector">
+                        <label>Wavelength</label>
+                        <select
+                            value={wavelength}
+                            onChange={(e) => setWavelength(Number(e.target.value))}
+                        >
+                            <option value={700}>700 nm</option>
+                            <option value={750}>750 nm</option>
+                            <option value={800}>800 nm</option>
+                            <option value={850}>850 nm</option>
+                        </select>
+                    </div>
+
+                    <button
+                        className="run-button"
+                        onClick={handleSubmit}
+                        disabled={loading}
                     >
-                        <option value={700}>700 nm</option>
-                        <option value={750}>750 nm</option>
-                        <option value={800}>800 nm</option>
-                        <option value={850}>850 nm</option>
-                    </select>
+                        {loading && <span className="spinner" />}
+                        {loading ? 'Running...' : 'Run Simulation'}
+                    </button>
                 </div>
 
-                <button
-                    className="run-button"
-                    onClick={handleSubmit}
-                    disabled={loading}
-                >
-                    {loading ? 'Running...' : 'Run Simulation'}
-                </button>
+                {status && (
+                    <p className={`status ${status === 'Simulation complete' ? 'success' : ''}`}>
+                        {status}
+                    </p>
+                )}
 
-                <p className="status">{status}</p>
+                {error && (
+                    <div className="error-box">
+                        {error}
+                    </div>
+                )}
             </div>
 
             {results && (
                 <div className="results-section">
                     <h2>Results</h2>
 
-                    <h3 className="section-label">Haemoglobin</h3>
+                    <p className="section-label">Haemoglobin</p>
                     <div className="results-grid">
                         <div className="result-card">
                             <h3>Total Hb</h3>
@@ -112,7 +164,7 @@ function Dashboard() {
                         </div>
                     </div>
 
-                    <h3 className="section-label">White Blood Cells</h3>
+                    <p className="section-label">White Blood Cells</p>
                     <div className="results-grid">
                         <div className="result-card">
                             <h3>WBC Index</h3>
@@ -120,10 +172,7 @@ function Dashboard() {
                         </div>
                         <div className="result-card">
                             <h3>WBC Level</h3>
-                            <p className={
-                                results.wbc_level === 'normal' ? 'normal' :
-                                    results.wbc_level === 'high' ? 'high' : 'low'
-                            }>
+                            <p className={results.wbc_level}>
                                 {results.wbc_level ? results.wbc_level.toUpperCase() : 'N/A'}
                             </p>
                         </div>
@@ -134,6 +183,22 @@ function Dashboard() {
                         <div className="result-card">
                             <h3>Absorbance 850nm</h3>
                             <p>{results.absorbance_850nm ? results.absorbance_850nm.toFixed(4) : 'N/A'}</p>
+                        </div>
+                    </div>
+
+                    <p className="section-label">Simulation Info</p>
+                    <div className="results-grid">
+                        <div className="result-card">
+                            <h3>Total Voxels</h3>
+                            <p>{results.total_voxels?.toLocaleString()}</p>
+                        </div>
+                        <div className="result-card">
+                            <h3>Absorbed Voxels</h3>
+                            <p>{results.absorbed_voxels?.toLocaleString()}</p>
+                        </div>
+                        <div className="result-card">
+                            <h3>File</h3>
+                            <p style={{fontSize: '0.9rem'}}>{results.filename}</p>
                         </div>
                     </div>
                 </div>
