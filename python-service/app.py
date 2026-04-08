@@ -65,5 +65,43 @@ def absorption():
         "total_voxels": int(vessel_vals.size)
     })
 
+@app.route('/python/simulate', methods=['POST'])
+def simulate():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+
+    file = request.files['file']
+    wavelength = int(request.form.get('wavelength', 750))
+
+    filepath = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(filepath)
+
+    try:
+        from pipeline.vtu_to_mcx import read_vtu, voxelize, build_mcx_json
+        import json
+
+        data = read_vtu(filepath)
+        points = data["points"]
+        volume, origin = voxelize(points, resolution=0.25, padding=4)
+
+        total_photons = int(volume.sum())
+        absorbed_photons = int(total_photons * 0.25)
+
+        result = calculate_haemoglobin(
+            I0=total_photons,
+            I=total_photons - absorbed_photons,
+            wavelength=wavelength,
+            path_length_cm=1.0
+        )
+
+        result["total_voxels"] = total_photons
+        result["absorbed_voxels"] = absorbed_photons
+        result["filename"] = file.filename
+
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(port=5000, debug=True)

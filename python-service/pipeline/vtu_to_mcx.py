@@ -28,7 +28,7 @@ import sys
 import zlib
 import xml.etree.ElementTree as ET
 from pathlib import Path
-
+from typing import Optional
 import numpy as np
 from scipy.ndimage import binary_fill_holes
 from scipy.spatial import cKDTree
@@ -272,6 +272,8 @@ OPTICAL_PROPS = {
 }
 
 
+from typing import Optional
+
 def build_mcx_json(volume: np.ndarray,
                    origin: np.ndarray,
                    resolution: float,
@@ -282,8 +284,8 @@ def build_mcx_json(volume: np.ndarray,
                    tstart: float = 0.0,
                    tend:   float = 5e-9,
                    tstep:  float = 5e-9,
-                   srcpos: list | None = None,
-                   srcdir: list | None = None) -> tuple:
+                   srcpos: Optional[list] = None,
+                   srcdir: Optional[list] = None) -> tuple:
     """
     Build the MCX JSON dict and the flat uint8 volume (Fortran order).
 
