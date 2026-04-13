@@ -62,7 +62,7 @@ def simulate():
 
         if len(vessel_vals) == 0 or np.isnan(vessel_vals).all():
             return jsonify(
-                {"error": "MCX output file contains no valid absorption data. Please check your JNII file."}), 400
+                {"error": "MCX output file contains no valid absorption data. Check JNII file."}), 400
 
         vessel_vals = vessel_vals[~np.isnan(vessel_vals)]
 

@@ -79,7 +79,7 @@ function Dashboard() {
         <div className="dashboard">
             <div className="header">
                 <h1>Ubi-voyance</h1>
-                <p>Biophotonics Simulation Pipeline</p>
+                <p>Physiological Plasma Environment Simulation Pipeline</p>
             </div>
 
             <div className="upload-section">
