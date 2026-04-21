@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import os
 import numpy as np
+import math
 from pipeline.haemoglobin import calculate_haemoglobin, calculate_wbc
 
 app = Flask(__name__)
@@ -61,8 +62,7 @@ def simulate():
         vessel_vals = absorption[absorption > 0]
 
         if len(vessel_vals) == 0 or np.isnan(vessel_vals).all():
-            return jsonify(
-                {"error": "MCX output file contains no valid absorption data. Check JNII file."}), 400
+            return jsonify({"error": "MCX output file contains no valid absorption data. Please check your JNII file."}), 400
 
         vessel_vals = vessel_vals[~np.isnan(vessel_vals)]
 
@@ -77,7 +77,13 @@ def simulate():
         total_photons = int(volume.sum())
         I0 = total_photons
 
-        absorbed_fraction = min(mean_abs / (mean_abs + 1), 0.95)
+        log_mean = math.log10(mean_abs + 1)
+        log_max = math.log10(float(vessel_vals.max()) + 1)
+
+        if log_max > 0:
+            absorbed_fraction = min(log_mean / (log_max * 2), 0.95)
+        else:
+            absorbed_fraction = 0.5
 
         I = max(int(I0 * (1 - absorbed_fraction)), 1)
 
